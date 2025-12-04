@@ -69,7 +69,7 @@ jobs:
             # Pull new image
             docker pull $IMAGE
 
-            # Stop & remove old container if exists
+            Stop & remove old container if exists
             if docker ps -q --filter "name=webapp_container" | grep -q .; then
               docker stop webapp_container || true
               docker rm webapp_container || true
