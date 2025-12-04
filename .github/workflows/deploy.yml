@@ -52,7 +52,7 @@ jobs:
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
 
       - name: Deploy to EC2 via SSH - pull image and restart container
-        uses: appleboy/ssh-action@v0.1.12
+        uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
