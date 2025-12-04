@@ -32,7 +32,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.IMAGE_NAME }}:latest
+            ${{ secrets.IMAGE_NAME }}:ajay
 
   deploy-to-ec2:
     runs-on: ubuntu-latest
