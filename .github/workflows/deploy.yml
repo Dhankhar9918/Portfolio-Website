@@ -35,47 +35,50 @@ jobs:
             ${{ secrets.IMAGE_NAME }}:ajay
 
   deploy-to-ec2:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - name: Wait for image tag
-        run: echo "Deploying image tag ${{ needs.build-and-push.outputs.image-tag }}" || true
+  runs-on: ubuntu-latest
+  needs: build-and-push
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-      - name: Add known host (avoid interactive prompt)
-        run: |
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
+  steps:
+    - name: Wait for image tag
+      run: |
+        echo "Deploying image tag: ${{ needs.build-and-push.outputs.image-tag }}"
 
-      - name: Deploy to EC2 via SSH - pull image and restart container
-        uses: appleboy/ssh-action@v0.1.8
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            set -eux
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
 
-            IMAGE="${{ secrets.IMAGE_NAME }}:${{ needs.build-and-push.outputs.image-tag }}"
+    - name: Add known host
+      run: |
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
 
-            # Optional: login to docker hub on the EC2 instance (if your image is private)
-            docker --version || (curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh)
-            # If you're using a private repo: echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin
-            # Pull new image
-            docker pull $IMAGE
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v0.1.8
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          set -eux
 
-            Stop & remove old container if exists
-            if docker ps -q --filter "name=webapp_container" | grep -q .; then
-              docker stop webapp_container || true
-              docker rm webapp_container || true
-            fi
+          # ---- Correct image name with static tag "ajay" ----
+          IMAGE="${{ secrets.IMAGE_NAME }}:ajay"
 
-            # Run new container (map port 80)
-            docker run -d --restart=always --name webapp_container -p 80:80 $IMAGE
+          # Ensure docker exists
+          docker --version || (curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh)
 
-            # optional: prune dangling images
-            docker image prune -f || true
+          # Pull latest image
+          docker pull $IMAGE
+
+          # Stop & remove old container
+          docker stop webapp_container || true
+          docker rm webapp_container || true
+
+          # Run new container
+          docker run -d --restart=always --name webapp_container -p 80:80 $IMAGE
+
+          # Cleanup
+          docker image prune -f || true
+
