@@ -32,7 +32,6 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.IMAGE_NAME }}:${{ steps.set-tag.outputs.image_tag }}
             ${{ secrets.IMAGE_NAME }}:latest
 
   deploy-to-ec2:
