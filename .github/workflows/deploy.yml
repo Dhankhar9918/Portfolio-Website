@@ -33,7 +33,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.IMAGE_NAME }}:${{ steps.set-tag.outputs.image_tag }}
-            ${{ secrets.IMAGE_NAME }}:latest
+            ${{ secrets.IMAGE_NAME }}:Ajay
 
   deploy-to-ec2:
     runs-on: ubuntu-latest
