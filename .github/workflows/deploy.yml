@@ -68,5 +68,5 @@ jobs:
             docker rm flipkart-container || true
 
             echo "Running NEW container..."
-            docker run -d --name flipkart-container -p 8080:8080 dhankhar9918/docker_image:version1
+            docker run -d --name flipkart-container -p 80:80 dhankhar9918/docker_image:version1
           EOF
